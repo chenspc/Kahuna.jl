@@ -27,19 +27,25 @@ end
 function owen_write(filepath::AbstractString, parent::AbstractString, name::AbstractString, data, args...; kwargs...)
     file_extension = splitext(filepath)[2]
     if file_extension == ".hdf5" || file_extension == ".h5"
-        output = save_hdf5(filepath, parent, name, data, args...; kwargs...)
+        save_hdf5(filepath, parent, name, data, args...; kwargs...)
     elseif file_extension == ".toml"
-        output = save_toml(filepath, args...; kwargs...)
+        save_toml(filepath, args...; kwargs...)
     elseif file_extension == ".jld2"
-        output = save_jld2(filepath, args...; kwargs...)
+        save_jld2(filepath, args...; kwargs...)
     else
-        output = FileIO.save(filepath, data)
+        FileIO.save(filepath, data)
     end
-    return output
 end
 
 function owen_write(filepath::AbstractString, mib_images::Vector{Array{T, 2}} where T <: Union{UInt8, UInt16, UInt32, UInt64}, mib_headers::Vector{MIBHeader}, args...; kwargs...)
-    save_hdf5(filepath::AbstractString, mib_images::Vector{Array{T, 2}} where T <: Union{UInt8, UInt16, UInt32, UInt64}, mib_headers::Vector{MIBHeader}, args...; kwargs...)
+    file_extension = splitext(filepath)[2]
+    if file_extension == ".hdf5" || file_extension == ".h5"
+        save_hdf5(filepath::AbstractString, mib_images::Vector{Array{T, 2}} where T <: Union{UInt8, UInt16, UInt32, UInt64}, mib_headers::Vector{MIBHeader}, args...; kwargs...)
+    elseif file_extension == ".jld2"
+        @write filepath mib_images mib_headers
+    else
+        disp("Data not saved.")
+    end
 end
 
 function load_dm3(filepath)
@@ -55,7 +61,6 @@ function load_hdf5(filepath)
 end
 
 function load_mat(filepath::AbstractString, varname::AbstractString)
-
     file = matopen(filepath)
     if exists(file, varname)
         output = read(file, varname)
@@ -114,7 +119,6 @@ function save_jld2(filepath)
 end
 
 function read_mib(filepath::AbstractString, first_header::AbstractMIBHeader; range=[1,typemax(Int)])
-
     offset = first_header.offset
     type = first_header.data_type
     dims = first_header.dims
@@ -142,13 +146,10 @@ function read_mib(filepath::AbstractString, first_header::AbstractMIBHeader; ran
             end
     end
     close(fid)
-
     return images, headers
-
 end
 
 function firstheader(filepath)
-
     fid = open(filepath)
     trial = split(String(read(fid, 384)), ",")
     offset = parse(Int, trial[3])
@@ -157,11 +158,9 @@ function firstheader(filepath)
     close(fid)
     first_header = make_mibheader(header_string; id=1)
     return first_header
-
 end
 
 function make_mibheader(header_string::AbstractString; id=0)
-
     header = split(header_string, ",")
     offset = parse(Int, header[3])
     nchip = parse(Int, header[4])
@@ -184,7 +183,6 @@ function make_mibheader(header_string::AbstractString; id=0)
               exposure_s,
               image_bit_depth,
               raw)
-
 end
 
 function type2dict(mibtype::AbstractMIBHeader)
