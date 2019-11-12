@@ -42,7 +42,7 @@ function owen_write(filepath::AbstractString, mib_images::Vector{Array{T, 2}} wh
     if file_extension == ".hdf5" || file_extension == ".h5"
         save_hdf5(filepath::AbstractString, mib_images::Vector{Array{T, 2}} where T <: Union{UInt8, UInt16, UInt32, UInt64}, mib_headers::Vector{MIBHeader}, args...; kwargs...)
     elseif file_extension == ".jld2"
-        @write filepath mib_images mib_headers
+        @save filepath mib_images mib_headers
     else
         disp("Data not saved.")
     end
