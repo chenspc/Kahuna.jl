@@ -1,6 +1,6 @@
 export owen_read, owen_write, load_dm3, load_dm4, load_hdf5, load_mat, load_mib, load_toml, load_jld2
 export save_hdf5, save_toml, save_jld2
-export firstheader, type2dict
+export firstheader, type2dict, mib2h5
 
 function owen_read(filepath::AbstractString, args...; kwargs...)
     file_extension = splitext(filepath)[2]
@@ -187,4 +187,14 @@ end
 
 function type2dict(mibtype::AbstractMIBHeader)
     Dict(string(fn) => string(getfield(mibtype, fn)) for fn ∈ fieldnames(typeof(mibtype)))
+end
+
+function mib2h5(load_filepath::AbstractString, save_filepath::AbstractString; range=[1,typemax(Int)])
+    mib_images, mib_headers = owen_read(load_filepath; range=[1,typemax(Int)])
+    owen_write(save_filepath, mib_images, mib_headers)
+end
+
+function mib2h5(load_filepath::AbstractString)
+    save_filepath = string(splitext(load_filepath)[1], ".h5")
+    mib2h5(load_filepath, save_filepath)
 end
