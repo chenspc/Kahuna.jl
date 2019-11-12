@@ -1,6 +1,6 @@
 export owen_read, owen_write, load_dm3, load_dm4, load_hdf5, load_mat, load_mib, load_toml, load_jld2
 export save_hdf5, save_toml, save_jld2
-export firstheader
+export firstheader, type2dict
 
 function owen_read(filepath::AbstractString, args...; kwargs...)
     file_extension = splitext(filepath)[2]
@@ -24,18 +24,22 @@ function owen_read(filepath::AbstractString, args...; kwargs...)
     return output
 end
 
-function owen_write(filepath, data)
+function owen_write(filepath::AbstractString, parent::AbstractString, name::AbstractString, data, args...; kwargs...)
     file_extension = splitext(filepath)[2]
     if file_extension == ".hdf5" || file_extension == ".h5"
-        output = load_hdf5(filepath, args...; kwargs...)
+        output = save_hdf5(filepath, parent, name, data, args...; kwargs...)
     elseif file_extension == ".toml"
-        output = load_toml(filepath, args...; kwargs...)
+        output = save_toml(filepath, args...; kwargs...)
     elseif file_extension == ".jld2"
-        output = load_jld2(filepath, args...; kwargs...)
+        output = save_jld2(filepath, args...; kwargs...)
     else
         output = FileIO.save(filepath, data)
     end
     return output
+end
+
+function owen_write(filepath::AbstractString, mib_images::Vector{Array{T, 2}} where T <: Union{UInt8, UInt16, UInt32, UInt64}, mib_headers::Vector{MIBHeader}, args...; kwargs...)
+    save_hdf5(filepath::AbstractString, mib_images::Vector{Array{T, 2}} where T <: Union{UInt8, UInt16, UInt32, UInt64}, mib_headers::Vector{MIBHeader}, args...; kwargs...)
 end
 
 function load_dm3(filepath)
@@ -85,8 +89,20 @@ function load_jld2(filepath)
 
 end
 
-function save_hdf5(filepath)
+function save_hdf5(filepath::AbstractString, parent::AbstractString, name::AbstractString, data, args...; kwargs...)
+    fid = h5open(filepath, "w"; kwargs...)
+        # d_write(parent, name, data)
+    close(fid)
+end
 
+# function save_hdf5(filepath::AbstractString, mib_images::Vector{Array{Integer, 2}}, mib_headers::Vector{AbstractMIBHeader}, args...; range=[1,typemax(Int)], kwargs...)
+function save_hdf5(filepath::AbstractString, mib_images::Vector{Array{T, 2}} where T <: Union{UInt8, UInt16, UInt32, UInt64}, mib_headers::Vector{MIBHeader}; range=[1,typemax(Int)], kwargs...)
+    for i = 1:length(mib_images)
+        if range[1] <= mib_headers[i].id <= range[2]
+            h5write(filepath, string("image_" , lpad(i, 8, "0")), mib_images[i])
+            h5writeattr(filepath, string("image_" , lpad(i, 8, "0")), type2dict(mib_headers[i]))
+        end
+    end
 end
 
 function save_toml(filepath)
@@ -97,51 +113,7 @@ function save_jld2(filepath)
 
 end
 
-
-
-
-
-
-
-
-
-abstract type AbstractMIB end
-abstract type AbstractMIBHeader end
-abstract type AbstractMIBImage end
-
-struct MIBHeader <: AbstractMIBHeader
-
-    offset::Int
-    nchip::Int
-    dims::Vector{Int}
-    data_type::DataType
-    chip_dims::Vector{Int}
-    time::DateTime
-    exposure_s::Float64
-    image_bit_depth::Int
-    raw::Bool
-
-    MIBHeader(offset,
-              nchip,
-              dims,
-              data_type,
-              chip_dims,
-              time,
-              exposure_s,
-              image_bit_depth,
-              raw) = new(offset,
-                         nchip,
-                         dims,
-                         data_type,
-                         chip_dims,
-                         time,
-                         exposure_s,
-                         image_bit_depth,
-                         raw)
-
-end
-
-function read_mib(filepath::AbstractString, first_header::MIBHeader; range=[1,typemax(Int)])
+function read_mib(filepath::AbstractString, first_header::AbstractMIBHeader; range=[1,typemax(Int)])
 
     offset = first_header.offset
     type = first_header.data_type
@@ -165,7 +137,7 @@ function read_mib(filepath::AbstractString, first_header::MIBHeader; range=[1,ty
             read!(fid, buffer)
             n += 1
             if n >= range[1]
-                push!(headers, make_mibheader(String(header_string)))
+                push!(headers, make_mibheader(String(header_string); id=n))
                 push!(images, hton.(buffer))
             end
     end
@@ -183,12 +155,12 @@ function firstheader(filepath)
     seekstart(fid)
     header_string = String(read(fid, offset))
     close(fid)
-    first_header = make_mibheader(header_string)
+    first_header = make_mibheader(header_string; id=1)
     return first_header
 
 end
 
-function make_mibheader(header_string::AbstractString)
+function make_mibheader(header_string::AbstractString; id=0)
 
     header = split(header_string, ",")
     offset = parse(Int, header[3])
@@ -202,7 +174,8 @@ function make_mibheader(header_string::AbstractString)
     exposure_s = parse(Float64, header[11])
     image_bit_depth = parse(Int, header[end-1])
     raw = header[7] == "R64"
-    MIBHeader(offset,
+    MIBHeader(id,
+              offset,
               nchip,
               dims,
               data_type,
@@ -212,4 +185,8 @@ function make_mibheader(header_string::AbstractString)
               image_bit_depth,
               raw)
 
+end
+
+function type2dict(mibtype::AbstractMIBHeader)
+    Dict(string(fn) => string(getfield(mibtype, fn)) for fn ∈ fieldnames(typeof(mibtype)))
 end
