@@ -1,7 +1,7 @@
-using Owen
+using Kahuna
 using Test
 
-@testset "owen_read" begin
+@testset "kahuna_read" begin
 
     @testset ".dm3 files" begin
         @test 2 + 2 == 4
@@ -18,15 +18,15 @@ using Test
     @testset ".mat files" begin
         # matfile = "test/sample_files/test_fileio_mat.mat";
         matfile = "sample_files/test_fileio_mat.mat";
-        @test typeof(owen_read(matfile, "mat0d")) == Float64
-        @test typeof(owen_read(matfile, "mat1d")) == Array{Float64,2} && size(owen_read(matfile, "mat1d")) == (1,10)
-        @test typeof(owen_read(matfile, "mat2d")) == Array{Float64,2} && size(owen_read(matfile, "mat2d")) == (10,10)
-        @test typeof(owen_read(matfile, "mat3d")) == Array{Float64,3} && size(owen_read(matfile, "mat3d")) == (10,10,10)
-        @test typeof(owen_read(matfile, "mat4d")) == Array{Float64,4} && size(owen_read(matfile, "mat4d")) == (10,10,10,10)
+        @test typeof(kahuna_read(matfile, "mat0d")) == Float64
+        @test typeof(kahuna_read(matfile, "mat1d")) == Array{Float64,2} && size(kahuna_read(matfile, "mat1d")) == (1,10)
+        @test typeof(kahuna_read(matfile, "mat2d")) == Array{Float64,2} && size(kahuna_read(matfile, "mat2d")) == (10,10)
+        @test typeof(kahuna_read(matfile, "mat3d")) == Array{Float64,3} && size(kahuna_read(matfile, "mat3d")) == (10,10,10)
+        @test typeof(kahuna_read(matfile, "mat4d")) == Array{Float64,4} && size(kahuna_read(matfile, "mat4d")) == (10,10,10,10)
 
-        @test owen_read(matfile; mode="list") == Set(["mat0d", "mat1d", "mat2d", "mat4d", "mat3d"])
+        @test kahuna_read(matfile; mode="list") == Set(["mat0d", "mat1d", "mat2d", "mat4d", "mat3d"])
 
-        @test owen_read(matfile) == Dict(map(x -> x => owen_read(matfile, x), collect(owen_read(matfile; mode="list"))))
+        @test kahuna_read(matfile) == Dict(map(x -> x => kahuna_read(matfile, x), collect(kahuna_read(matfile; mode="list"))))
     end
 
     @testset ".mib files" begin
@@ -40,12 +40,12 @@ using Test
         mibfiles = [mibfile512_12bit]
 
         for mibfile in mibfiles
-            mib_images, mib_headers = owen_read(mibfile)
+            mib_images, mib_headers = kahuna_read(mibfile)
             @test typeof(mib_images) == Array{Array{UInt16,2},1}
             @test typeof(mib_headers) == Array{MIBHeader,1}
-            # @test typeof(owen_read(mibfile, [1, 10])) == Array{Float64,2} && size(owen_read(mibfile, [1, 10])) == (1,10)
-            # @test typeof(owen_read(mibfile, [1, 10])) == Array{Float64,2} && size(owen_read(mibfile, [1, 10])) == (10,10)
-            # @test typeof(owen_read(mibfile, [1, 10])) == Array{Float64,2} && size(owen_read(mibfile, [1, 10])) == (10,10)
+            # @test typeof(kahuna_read(mibfile, [1, 10])) == Array{Float64,2} && size(kahuna_read(mibfile, [1, 10])) == (1,10)
+            # @test typeof(kahuna_read(mibfile, [1, 10])) == Array{Float64,2} && size(kahuna_read(mibfile, [1, 10])) == (10,10)
+            # @test typeof(kahuna_read(mibfile, [1, 10])) == Array{Float64,2} && size(kahuna_read(mibfile, [1, 10])) == (10,10)
         end
 
     end
@@ -61,7 +61,7 @@ using Test
 
 end
 
-@testset "owen_write" begin
+@testset "kahuna_write" begin
 
     @testset ".hdf5/.h5 files" begin
         @test 2 + 2 == 4

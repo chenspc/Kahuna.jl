@@ -1,8 +1,8 @@
-export owen_read, owen_write, load_dm3, load_dm4, load_hdf5, load_mat, load_mib, load_toml, load_jld2
+export kahuna_read, kahuna_write, load_dm3, load_dm4, load_hdf5, load_mat, load_mib, load_toml, load_jld2
 export save_hdf5, save_toml, save_jld2
 export firstheader, type2dict, mib2h5
 
-function owen_read(filepath::AbstractString, args...; kwargs...)
+function kahuna_read(filepath::AbstractString, args...; kwargs...)
     file_extension = splitext(filepath)[2]
     if file_extension == ".dm3"
         output = load_dm3(filepath, args...; kwargs...)
@@ -24,7 +24,7 @@ function owen_read(filepath::AbstractString, args...; kwargs...)
     return output
 end
 
-function owen_write(filepath::AbstractString, parent::AbstractString, name::AbstractString, data, args...; kwargs...)
+function kahuna_write(filepath::AbstractString, parent::AbstractString, name::AbstractString, data, args...; kwargs...)
     file_extension = splitext(filepath)[2]
     if file_extension == ".hdf5" || file_extension == ".h5"
         save_hdf5(filepath, parent, name, data, args...; kwargs...)
@@ -37,7 +37,7 @@ function owen_write(filepath::AbstractString, parent::AbstractString, name::Abst
     end
 end
 
-function owen_write(filepath::AbstractString, mib_images::Vector{Array{T, 2}} where T <: Union{UInt8, UInt16, UInt32, UInt64}, mib_headers::Vector{MIBHeader}, args...; kwargs...)
+function kahuna_write(filepath::AbstractString, mib_images::Vector{Array{T, 2}} where T <: Union{UInt8, UInt16, UInt32, UInt64}, mib_headers::Vector{MIBHeader}, args...; kwargs...)
     file_extension = splitext(filepath)[2]
     if file_extension == ".hdf5" || file_extension == ".h5"
         save_hdf5(filepath::AbstractString, mib_images::Vector{Array{T, 2}} where T <: Union{UInt8, UInt16, UInt32, UInt64}, mib_headers::Vector{MIBHeader}, args...; kwargs...)
@@ -190,8 +190,8 @@ function type2dict(mibtype::AbstractMIBHeader)
 end
 
 function mib2h5(load_filepath::AbstractString, save_filepath::AbstractString; range=[1,typemax(Int)])
-    mib_images, mib_headers = owen_read(load_filepath; range=[1,typemax(Int)])
-    owen_write(save_filepath, mib_images, mib_headers)
+    mib_images, mib_headers = kahuna_read(load_filepath; range=[1,typemax(Int)])
+    kahuna_write(save_filepath, mib_images, mib_headers)
 end
 
 function mib2h5(load_filepath::AbstractString)

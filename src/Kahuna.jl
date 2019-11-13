@@ -1,4 +1,4 @@
-module Owen
+module Kahuna
 
 using FileIO
 using MAT
