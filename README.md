@@ -1,4 +1,4 @@
-# Owen
+# Kahuna
 
 [![Build Status](https://travis-ci.com/chenspc/Owen.jl.svg?branch=master)](https://travis-ci.com/chenspc/Owen.jl)
 [![Build Status](https://ci.appveyor.com/api/projects/status/github/chenspc/Owen.jl?svg=true)](https://ci.appveyor.com/project/chenspc/Owen-jl)
